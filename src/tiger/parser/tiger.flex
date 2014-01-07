@@ -39,7 +39,7 @@ import tiger.message.MsgQ;
 		messageQueue.error(msg);
 	}
 
-	private MsgQ messageQueue = new MsgQ();
+	public MsgQ messageQueue = new MsgQ();
 %}
 
 %eofval{
@@ -53,7 +53,7 @@ Identifier = [:jletter:][:jletterdigit:]*
 Decimal = [1-9][0-9]*
 Octal = 0[0-7]*
 Hex = 0x([0-9]|[A-F]|[a-f])+
-Num = {Octal}|{Hex}|Decimal
+Num = {Octal}|{Hex}|{Decimal}
 LineTerminator = \r|\n|\r\n
 Space = [ \t\f] | {LineTerminator}
 
@@ -89,11 +89,12 @@ Space = [ \t\f] | {LineTerminator}
 	"break" 	{return tok(sym.BREAK,null); }
 	"do" 		{return tok(sym.DO,null); }
 	"if" 		{return tok(sym.IF,null); }
-	"else" 		{return tok(sym.IF,null); }
+	"else" 		{return tok(sym.ELSE,null); }
 	"end" 		{return tok(sym.END,null); }
 	"for" 		{return tok(sym.FOR,null); }
 	"function" 	{return tok(sym.FUNCTION,null); }
 	"in" 		{return tok(sym.IN,null); }
+	"string"	{return tok(sym.STRING,null); }
 	"let" 		{return tok(sym.LET,null); }
 	"nil" 		{return tok(sym.NIL,null); }
 	"of" 		{return tok(sym.OF,null); }
@@ -102,8 +103,8 @@ Space = [ \t\f] | {LineTerminator}
 	"type" 		{return tok(sym.TYPE,null); }
 	"var" 		{return tok(sym.VAR,null); }
 	"while"		{return tok(sym.WHILE,null); }
-	{Num}		{return tok(sym.NUM,yytext()); }
-	{LineTerminator}	{error("new line"); }
+	{Num}		{return tok(sym.NUM, new Integer(yytext())); }
+	{LineTerminator}	{ /* error("new line");*/ }
 	{Space} 	{}
 	{Identifier} { return tok(sym.ID,yytext()); }
 	[^] 		{ error(yyline,yychar,"Unexpected char"+yytext()); }
@@ -111,7 +112,7 @@ Space = [ \t\f] | {LineTerminator}
 }
 
 <STRING> {
-	\"	 	{ yybegin(YYINITIAL); return tok(sym.STRING,string); }
+	\"	 	{ yybegin(YYINITIAL); return tok(sym.STR,string.toString()); }
 	"\\n"	{ string.append("\n"); }
 	"\\t"	{ string.append("\t"); }
 	"\\\""	{ string.append("\""); }

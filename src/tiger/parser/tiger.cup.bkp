@@ -1,0 +1,73 @@
+package tiger.parser;
+import java_cup.runtime.*;
+import tiger.Absyn.*;
+
+/* Preliminaries to set up and use the scanner.  */
+init with {: 
+:};
+
+scan with {: return lexer.next_token(); :};
+
+parser code {:
+	Tigerlex lexer;
+
+	public Tigerparser(Tigerlex lex){
+		super(lex);
+		lexer = lex;
+	}
+
+:};
+
+/* Terminals (tokens returned by the scanner). */
+terminal           	PLUS, MINUS, TIMES, DIVIDE, MOD;
+terminal			GT, GE, LE, LT, EQ, NEQ;
+terminal			AND, OR, COMMA, DOT, SEMICOLON, COLON;
+terminal          	IF, THEN, ELSE, WHILE, FOR, END, DO, TO, ARRAY, LET, ASSIGN, BREAK, ID, FUNCTION, IN;
+terminal			INT, STRING, VAR, TYPE, NIL, OF;
+terminal           	UMINUS, LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
+terminal String 	NUM;
+
+/* Non-terminals */
+non terminal            expr_list, expr_part;
+non terminal Integer    expr;
+
+/* Precedences */
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE, MOD;
+precedence left UMINUS;
+
+/* The grammar */
+expr_list ::= expr_list expr_part 
+	      | 
+              expr_part;
+
+expr_part ::= expr:e 
+	      {: System.out.println("= " + e); :} 
+              SEMICOLON             
+	      ;
+
+expr      ::= expr:e1 PLUS expr:e2    
+	      {: RESULT = new Integer(e1.intValue() + e2.intValue()); :} 
+	      | 
+              expr:e1 MINUS expr:e2    
+              {: RESULT = new Integer(e1.intValue() - e2.intValue()); :} 
+	      | 
+              expr:e1 TIMES expr:e2 
+	      {: RESULT = new Integer(e1.intValue() * e2.intValue()); :} 
+	      | 
+              expr:e1 DIVIDE expr:e2 
+	      {: RESULT = new Integer(e1.intValue() / e2.intValue()); :} 
+	      | 
+              expr:e1 MOD expr:e2 
+	      {: RESULT = new Integer(e1.intValue() % e2.intValue()); :} 
+	      | 
+              NUM:str                 
+	      {: RESULT = Integer.parseInt(str); :} 
+	      | 
+              MINUS expr:e             
+	      {: RESULT = new Integer(0 - e.intValue()); :} 
+	      %prec UMINUS
+	      | 
+              LPAREN expr:e RPAREN     
+	      {: RESULT = e; :} 
+	      ;

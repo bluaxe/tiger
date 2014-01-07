@@ -2,8 +2,11 @@ package tiger.parser;
 
 import java_cup.runtime.Symbol;
 import java.io.*;
+
+import tiger.Absyn.*;
 import tiger.parser.Tigerlex;
-import tiger.parser.sym;	
+import tiger.parser.sym;
+import tiger.parser.Tigerparser;
 
 public class Test {
 
@@ -12,8 +15,42 @@ public class Test {
 	 */
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
-		lexcialTest("res/sample.in");
-
+		String my = new String("res/test.in");
+		String good = new String("res/Good/queens.tig");
+		String inputfile = new String("res/Bad/test10.tig");
+		PrintStream out = new PrintStream("res/tiger.abs");
+		//lexcialTest(inputfile);
+		cupTest(inputfile,out);
+	}
+	
+	public static void cupTest(String filename,PrintStream out) throws IOException {
+		Tigerlex scanner = null;
+		try {
+            scanner = new Tigerlex( new java.io.FileReader(filename));
+            
+            Tigerparser tigerparser= new Tigerparser(scanner);
+    		try {
+    			tigerparser.parse();
+    			Print print= new Print(out);
+    			print.prExp(tigerparser.parseResult, 0);
+    			System.out.print("OK!");
+    		} catch (Exception e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		}
+        }
+        catch (java.io.FileNotFoundException e) {
+            System.out.println("File not found ");
+        }
+        catch (java.io.IOException e) {
+            System.out.println("IO error scanning file ");
+            System.out.println(e);
+        }
+        catch (Exception e) {
+            System.out.println("Unexpected exception:");
+            e.printStackTrace();
+        }
+		
 	}
 
 	public static void lexcialTest(String filename) throws IOException	 {

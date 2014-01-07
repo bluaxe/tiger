@@ -20,7 +20,7 @@ import tiger.message.MsgQ;
 %function next_token
 %standalone
 %unicode
-%state STRING COMMENT
+%state STRING STRINGNS COMMENT
 %type java_cup.runtime.Symbol
 
 %{
@@ -43,6 +43,9 @@ import tiger.message.MsgQ;
 %}
 
 %eofval{
+	if (yystate()==STRING) error("'\"' doesn't match!");
+	if (yystate()==STRINGNS) error("'\\' doesn't match!");
+	if (yystate()==COMMENT) error("Comment symbol doesn't match!");
 	return tok(sym.EOF,null);
 %eofval}
 
@@ -50,7 +53,7 @@ Identifier = [:jletter:][:jletterdigit:]*
 Decimal = [1-9][0-9]*
 Octal = 0[0-7]*
 Hex = 0x([0-9]|[A-F]|[a-f])+
-Num = {Octal}|{Hex}|Decimal
+Num = {Octal}|{Hex}|{Decimal}
 LineTerminator = \r|\n|\r\n
 Space = [ \t\f] | {LineTerminator}
 
@@ -91,6 +94,7 @@ Space = [ \t\f] | {LineTerminator}
 	"for" 		{return tok(sym.FOR,null); }
 	"function" 	{return tok(sym.FUNCTION,null); }
 	"in" 		{return tok(sym.IN,null); }
+	"string"	{return tok(sym.STRING,null); }
 	"let" 		{return tok(sym.LET,null); }
 	"nil" 		{return tok(sym.NIL,null); }
 	"of" 		{return tok(sym.OF,null); }
@@ -100,7 +104,7 @@ Space = [ \t\f] | {LineTerminator}
 	"var" 		{return tok(sym.VAR,null); }
 	"while"		{return tok(sym.WHILE,null); }
 	{Num}		{return tok(sym.NUM,yytext()); }
-	{LineTerminator}	{error("new line"); }
+	{LineTerminator}	{ /* error("new line");*/ }
 	{Space} 	{}
 	{Identifier} { return tok(sym.ID,yytext()); }
 	[^] 		{ error(yyline,yychar,"Unexpected char"+yytext()); }
@@ -108,18 +112,25 @@ Space = [ \t\f] | {LineTerminator}
 }
 
 <STRING> {
-	\"	 	{ yybegin(YYINITIAL); return tok(sym.STRING,string); }
+	\"	 	{ yybegin(YYINITIAL); return tok(sym.STR,string); }
 	"\\n"	{ string.append("\n"); }
 	"\\t"	{ string.append("\t"); }
 	"\\\""	{ string.append("\""); }
 	"\\\\"	{ string.append("\\"); }
-	"\\"{Space} {}
 	"\\"[0-9]{3} {	int ascii=Integer.parseInt(yytext().substring(1,4));
 					if (ascii>255) error("Error: ASCII code exceed 255.");
-					else string.append((char)(ascii-64)); }
+					else string.append((char)ascii); }
 	"\\\^"[@A-Z\[\]\\\^_] { 
-					int ascii = yytext().charAt(3);
-					string.append((char)ascii); }
+					int ascii = yytext().charAt(2);
+					string.append((char)(ascii-64)); }
+	"\\"	{ yybegin(STRINGNS); }
+	[^] 	{ string.append(yytext());}
+}
+
+<STRINGNS> {
+	"\\" 	{ yybegin(STRING); }
+	{Space} {}
+	"\""	{ error(yyline, yychar, "Error: '\\' doesn't match!"); }
 	[^] 	{ string.append(yytext());}
 }
 
