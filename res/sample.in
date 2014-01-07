@@ -1,0 +1,16 @@
+a := 052;
+var a;
+
+var b;
+if a; then b:=0x32; end;
+
+c :=0;
+
+if c =0 then a:= 031;
+
+/* A long /* string */  */
+"s\ts\nf\"d\\s\
+s	prs	 dfsa
+\oka\093\^Aa "
+
+a
